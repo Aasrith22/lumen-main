@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Subscription Management System Design System 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* Deep Blue - Primary brand color */
+    --deep-blue: 208 100% 25%;
+    --deep-blue-foreground: 0 0% 100%;
+
+    /* Soft Cyan - Hover states and success */
+    --soft-cyan: 180 100% 70%;
+    --soft-cyan-foreground: 208 100% 25%;
+
+    /* Accent Orange - Warnings and highlights */
+    --accent-orange: 25 95% 60%;
+    --accent-orange-foreground: 0 0% 100%;
+
+    /* Light Gray - Secondary elements */
+    --light-gray: 210 16% 93%;
+    --light-gray-foreground: 220 13% 30%;
+
+    /* Dark Gray - Text on light backgrounds */
+    --dark-gray: 220 13% 30%;
+    --dark-gray-foreground: 0 0% 100%;
+
+    /* Semantic tokens */
+    --primary: var(--deep-blue);
+    --primary-foreground: var(--deep-blue-foreground);
+
+    --secondary: var(--light-gray);
+    --secondary-foreground: var(--light-gray-foreground);
+
+    --accent: var(--accent-orange);
+    --accent-foreground: var(--accent-orange-foreground);
+
+    --success: var(--soft-cyan);
+    --success-foreground: var(--soft-cyan-foreground);
+
+    --warning: var(--accent-orange);
+    --warning-foreground: var(--accent-orange-foreground);
+
+    /* Card and component colors */
+    --card: 0 0% 100%;
+    --card-foreground: var(--dark-gray);
+
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--dark-gray);
+
+    --muted: var(--light-gray);
+    --muted-foreground: var(--dark-gray);
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 16% 90%;
+    --input: var(--border);
+    --ring: var(--deep-blue);
+
+    --radius: 0.5rem;
+
+    /* Custom design system tokens */
+    --navbar-bg: var(--deep-blue);
+    --navbar-text: var(--deep-blue-foreground);
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--deep-blue)), hsl(208 100% 35%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 16% 98%));
+    
+    /* Shadows */
+    --shadow-card: 0 2px 8px hsl(var(--deep-blue) / 0.1);
+    --shadow-hover: 0 4px 16px hsl(var(--deep-blue) / 0.15);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  }
+
+  .dark {
+    /* Dark mode using same brand colors but adjusted for dark backgrounds */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 217.2 32.6% 17.5%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217.2 32.6% 17.5%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: var(--soft-cyan);
+    --primary-foreground: var(--deep-blue);
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: var(--accent-orange);
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: var(--soft-cyan);
+
+    --navbar-bg: var(--deep-blue);
+    --navbar-text: var(--deep-blue-foreground);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  /* Custom component styles using design system */
+  .navbar {
+    background: hsl(var(--navbar-bg));
+    color: hsl(var(--navbar-text));
+  }
+  
+  .card-hover {
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-hover:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .usage-chart {
+    filter: drop-shadow(0 4px 6px hsl(var(--deep-blue) / 0.1));
+  }
+}

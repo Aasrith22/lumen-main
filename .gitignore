@@ -1,0 +1,60 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Ignored for the template, you probably want to remove it:
+package-lock.json
+
+# Build output
+build/
+out/
+coverage/
+*.tsbuildinfo
+*.tgz
+
+# Environment files
+.env*
+
+# Convex generated files
+convex/_generated/
+
+# Vite cache
+.vite/
+vite.svg
+
+# TypeScript cache
+.tsbuildinfo
+node_modules/.tmp/
+
+# Mac system files
+.DS_Store
+
+# Cursor IDE
+.cursor/
+
+# Misc
+*.swp
+*.swo
+*.tmp
+*.bak

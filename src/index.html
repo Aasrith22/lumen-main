@@ -391,8 +391,8 @@
         </div>
 
         <div class="tab-buttons">
-            <button class="tab-button active" onclick="switchTab('signin')">Sign In</button>
-            <button class="tab-button" onclick="switchTab('signup')">Create Account</button>
+            <button class="tab-button active" onclick="switchTab('signin', this)">Sign In</button>
+            <button class="tab-button" onclick="switchTab('signup', this)">Create Account</button>
         </div>
 
         <!-- Sign In Form -->
@@ -432,7 +432,7 @@
                 <div id="signin-message" class="message"></div>
 
                 <div class="form-footer">
-                    <p>Don't have an account? <a href="#" onclick="switchTab('signup')">Create one here</a></p>
+                    <p>Don't have an account? <a href="#" onclick="switchTab('signup', document.querySelector('.tab-buttons .tab-button:nth-child(2)'))">Create one here</a></p>
                 </div>
             </form>
         </div>
@@ -498,20 +498,22 @@
                 <div id="signup-message" class="message"></div>
 
                 <div class="form-footer">
-                    <p>Already have an account? <a href="#" onclick="switchTab('signin')">Sign in here</a></p>
+                    <p>Already have an account? <a href="#" onclick="switchTab('signin', document.querySelector('.tab-buttons .tab-button:nth-child(1)'))">Sign in here</a></p>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // API Base URL - Update this to match your backend server
-        const API_BASE_URL = 'http://localhost:3000/api/user';
+                // API Base URL - Prefer same-origin when served by backend (/login); fallback to localhost during file/Live Server
+                const API_BASE_URL = (location.origin.includes('127.0.0.1:3000') || location.origin.includes('localhost:3000'))
+                    ? '/api/user'
+                    : 'http://localhost:3000/api/user';
 
         // Check backend connectivity on page load
         async function checkBackendConnection() {
             try {
-                const response = await fetch('http://localhost:3000/api/user/health', {
+                const response = await fetch(`${API_BASE_URL}/health`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -546,7 +548,7 @@
         window.addEventListener('load', checkBackendConnection);
 
         // Tab switching functionality
-        function switchTab(tab) {
+        function switchTab(tab, el) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -557,7 +559,9 @@
 
             // Show selected tab
             document.getElementById(tab).classList.add('active');
-            event.target.classList.add('active');
+            if (el) {
+                el.classList.add('active');
+            }
 
             // Clear any messages
             document.querySelectorAll('.message').forEach(msg => {
@@ -609,12 +613,27 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    showMessage('signin-message', `Welcome back, ${result.user.fullname}! 🎉`, 'success');
-                    // Redirect or update UI as needed
+                    showMessage('signin-message', `Welcome', ${result.user.fullname}! 🎉`, 'success');
+                    
+                    // Store user data in localStorage for the admin dashboard
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('authToken', result.token || '');
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    // Redirect based on user role
                     setTimeout(() => {
-                        console.log('User logged in:', result.user);
-                        // You can redirect to dashboard here
-                        // window.location.href = '/dashboard';
+                        if (result.user.role === 'admin') {
+                            // Redirect to admin dashboard (React app) with one-time auth handoff
+                            const handoff = btoa(encodeURIComponent(JSON.stringify({
+                                user: result.user,
+                                isLoggedIn: true
+                            })));
+                            window.location.href = `http://127.0.0.1:5173/?auth=${handoff}`;
+                        } else {
+                            // For regular users, you can create a simple user dashboard or redirect elsewhere
+                            showMessage('signin-message', 'User dashboard coming soon! 🚧', 'success');
+                            console.log('User logged in:', result.user);
+                        }
                     }, 2000);
                 } else {
                     showMessage('signin-message', result.message || 'Sign in failed. Please check your credentials.', 'error');
@@ -734,6 +753,11 @@
             } else {
                 this.style.borderColor = '#28a745';
             }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // No auto-redirect here to avoid redirect loops across different origins
         });
     </script>
 </body>

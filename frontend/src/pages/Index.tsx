@@ -13,7 +13,30 @@ import {
   Download
 } from "lucide-react";
 
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
+
 const Index = () => {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<{ totalUsers: number; activeSubscriptions: number; monthlyRevenue: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.adminStats();
+        setStats(res.data);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -32,7 +55,7 @@ const Index = () => {
               <Download className="h-4 w-4" />
               Export
             </Button>
-            <Button variant="admin-primary" size="sm">
+            <Button variant="admin-primary" size="sm" onClick={() => navigate('/plans?add=1')}>
               <Plus className="h-4 w-4" />
               Add Plan
             </Button>
@@ -43,32 +66,32 @@ const Index = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Users"
-            value="2,847"
-            change="+12.5%"
+            value={stats ? stats.totalUsers : (loading ? "..." : "0")}
+            change={undefined}
             changeType="positive"
             icon={Users}
             description="from last month"
           />
           <MetricCard
             title="Active Subscriptions"
-            value="2,020"
-            change="+8.2%"
+            value={stats ? stats.activeSubscriptions : (loading ? "..." : "0")}
+            change={undefined}
             changeType="positive"
             icon={CreditCard}
             description="from last month"
           />
           <MetricCard
             title="Monthly Revenue"
-            value="$142,580"
-            change="+15.3%"
+            value={stats ? `$${stats.monthlyRevenue?.toLocaleString?.() ?? stats.monthlyRevenue}` : (loading ? "..." : "$0")}
+            change={undefined}
             changeType="positive"
             icon={DollarSign}
             description="from last month"
           />
           <MetricCard
             title="Growth Rate"
-            value="23.1%"
-            change="+2.4%"
+            value={"—"}
+            change={undefined}
             changeType="positive"
             icon={TrendingUp}
             description="this quarter"

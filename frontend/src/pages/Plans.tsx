@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,31 +22,53 @@ import {
   TrendingUp
 } from "lucide-react";
 
-// Mock data based on CSV structure
-const mockPlans = [
-  { id: 1, name: "Fibernet Basic", price: 59.99, autoRenewal: true, status: "Active", subscribers: 234, revenue: 14037.66 },
-  { id: 2, name: "Fibernet Premium", price: 89.99, autoRenewal: true, status: "Active", subscribers: 189, revenue: 17007.11 },
-  { id: 3, name: "Broadband Copper", price: 39.99, autoRenewal: false, status: "Active", subscribers: 156, revenue: 6238.44 },
-  { id: 4, name: "Fibernet Pro", price: 129.99, autoRenewal: true, status: "Active", subscribers: 89, revenue: 11569.11 },
-  { id: 5, name: "Business Basic", price: 199.99, autoRenewal: true, status: "Inactive", subscribers: 45, revenue: 8999.55 },
-];
+import api from "@/lib/api";
 
 const Plans = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
+    type: "Fibernet",
+    speed: "100 Mbps",
+    quota: "100",
     description: "",
     features: "",
     autoRenewal: true,
     status: "Active"
   });
 
-  const filteredPlans = mockPlans.filter(plan =>
-    plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.status.toLowerCase().includes(searchTerm.toLowerCase())
+  const location = useLocation();
+  const shouldOpenAdd = useMemo(() => new URLSearchParams(location.search).get('add') === '1', [location.search]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.getPlans();
+        setPlans(res.data || []);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (shouldOpenAdd) {
+      handleAddPlan();
+    }
+  }, [shouldOpenAdd]);
+
+  const filteredPlans = plans.filter(plan =>
+    (plan.Name || plan.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (plan.Status === "Active" ? "active" : "inactive").includes(searchTerm.toLowerCase())
   );
 
   const handleAddPlan = () => {
@@ -53,6 +76,9 @@ const Plans = () => {
     setFormData({
       name: "",
       price: "",
+      type: "Fibernet",
+      speed: "100 Mbps",
+      quota: "100",
       description: "",
       features: "",
       autoRenewal: true,
@@ -64,21 +90,55 @@ const Plans = () => {
   const handleEditPlan = (plan: any) => {
     setSelectedPlan(plan);
     setFormData({
-      name: plan.name,
-      price: plan.price.toString(),
-      description: "High-speed internet with unlimited data",
-      features: "Unlimited data, 24/7 support, Free installation",
-      autoRenewal: plan.autoRenewal,
-      status: plan.status
+      name: plan.Name || plan.name || "",
+      price: String(plan.Price || plan.price || ""),
+      type: plan.type || "Fibernet",
+      speed: plan.speed || "100 Mbps",
+      quota: String(plan.quota || ""),
+      description: plan.description || "",
+      features: (plan.features || []).join("\n"),
+      autoRenewal: (plan["Auto Renewal Allowed"] === "Yes") || true,
+      status: (plan.Status === "Active") ? "Active" : "Inactive"
     });
     setIsAddPlanOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission - will integrate with backend later
-    console.log("Plan data:", formData);
-    setIsAddPlanOpen(false);
+    try {
+      const payload = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        type: formData.type,
+        speed: formData.speed,
+        quota: parseInt(formData.quota || '0', 10),
+        features: formData.features
+          .split(/\n|\r/)
+          .map(f => f.trim())
+          .filter(Boolean),
+        isActive: formData.status === "Active",
+      };
+      if (selectedPlan?._id) {
+        const res = await api.updatePlan(selectedPlan._id, payload);
+        setPlans(prev => prev.map(p => (p._id === selectedPlan._id ? res.data : p)));
+      } else {
+        const res = await api.createPlan(payload);
+        setPlans(prev => [res.data, ...prev]);
+      }
+      setIsAddPlanOpen(false);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this plan?")) return;
+    try {
+      await api.deletePlan(id);
+      setPlans(prev => prev.filter(p => p._id !== id));
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -114,7 +174,7 @@ const Plans = () => {
               <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{mockPlans.length}</div>
+              <div className="text-2xl font-bold text-foreground">{plans.length}</div>
               <p className="text-xs text-success">+2 new this month</p>
             </CardContent>
           </Card>
@@ -126,7 +186,8 @@ const Plans = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {mockPlans.reduce((sum, plan) => sum + plan.subscribers, 0)}
+                {/* Placeholder: requires subscription aggregation */}
+                {0}
               </div>
               <p className="text-xs text-success">+12.5% from last month</p>
             </CardContent>
@@ -138,9 +199,7 @@ const Plans = () => {
               <TrendingUp className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                ${mockPlans.reduce((sum, plan) => sum + plan.revenue, 0).toLocaleString()}
-              </div>
+              <div className="text-2xl font-bold text-foreground">$0</div>
               <p className="text-xs text-success">+8.2% from last month</p>
             </CardContent>
           </Card>
@@ -165,38 +224,31 @@ const Plans = () => {
             <CardTitle>Subscription Plans</CardTitle>
           </CardHeader>
           <CardContent>
+            {loading && <p className="text-sm text-muted-foreground">Loading plans...</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {!loading && !error && (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Plan Name</TableHead>
                   <TableHead>Price</TableHead>
-                  <TableHead>Auto Renewal</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Subscribers</TableHead>
-                  <TableHead>Revenue</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPlans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell className="font-medium">{plan.name}</TableCell>
-                    <TableCell>${plan.price}/month</TableCell>
-                    <TableCell>
-                      <Badge variant={plan.autoRenewal ? "default" : "secondary"}>
-                        {plan.autoRenewal ? "Yes" : "No"}
-                      </Badge>
-                    </TableCell>
+                  <TableRow key={plan._id}>
+                    <TableCell className="font-medium">{plan.Name || plan.name}</TableCell>
+                    <TableCell>${plan.Price || plan.price}/month</TableCell>
                     <TableCell>
                       <Badge 
-                        variant={plan.status === "Active" ? "default" : "secondary"}
-                        className={plan.status === "Active" ? "bg-success text-success-foreground" : ""}
+                        variant={plan.Status === "Active" || plan.isActive ? "default" : "secondary"}
+                        className={plan.Status === "Active" || plan.isActive ? "bg-success text-success-foreground" : ""}
                       >
-                        {plan.status}
+                        {plan.Status === "Active" || plan.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{plan.subscribers}</TableCell>
-                    <TableCell>${plan.revenue.toLocaleString()}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button 
@@ -206,7 +258,7 @@ const Plans = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(plan._id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -215,6 +267,7 @@ const Plans = () => {
                 ))}
               </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -247,6 +300,40 @@ const Plans = () => {
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: e.target.value})}
                     placeholder="59.99"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Input
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    placeholder="Fibernet or Broadband Copper"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="speed">Speed</Label>
+                  <Input
+                    id="speed"
+                    value={formData.speed}
+                    onChange={(e) => setFormData({...formData, speed: e.target.value})}
+                    placeholder="100 Mbps"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quota">Quota (GB)</Label>
+                  <Input
+                    id="quota"
+                    type="number"
+                    value={formData.quota}
+                    onChange={(e) => setFormData({...formData, quota: e.target.value})}
+                    placeholder="100"
                     required
                   />
                 </div>

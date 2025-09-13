@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,8 @@ import UsageChart from "./UsageChart";
 import PlanCard from "./PlanCard";
 import ServiceCard from "../services/ServiceCard";
 import { Bell, TrendingUp, Users, DollarSign, Package } from "lucide-react";
+import api from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth";
 
 interface DashboardProps {
   userType: 'user' | 'admin';
@@ -13,6 +15,10 @@ interface DashboardProps {
 
 const Dashboard = ({ userType }: DashboardProps) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [plans, setPlans] = useState<any[]>([]);
+  const [subs, setSubs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const user = useMemo(() => getCurrentUser(), []);
 
   // Mock data
   const usageData = [
@@ -20,63 +26,94 @@ const Dashboard = ({ userType }: DashboardProps) => {
     { name: 'Remaining', value: 55, color: 'hsl(var(--soft-cyan))' },
   ];
 
-  const userPlans = [
-    {
-      id: '1',
-      name: 'Fibernet Pro',
-      type: 'High-Speed Internet',
-      quota: 100,
-      speed: '100 Mbps',
-      price: 49.99,
-      expiryDate: '2024-10-15',
-      status: 'active' as const,
-      daysLeft: 12,
-    },
-    {
-      id: '2',
-      name: 'Broadband Basic',
-      type: 'Standard Internet',
-      quota: 50,
-      speed: '50 Mbps',
-      price: 29.99,
-      expiryDate: '2024-09-20',
-      status: 'expiring' as const,
-      daysLeft: 7,
-    },
-  ];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [plansRes, subsRes] = await Promise.all([
+          api.getPlans(),
+          api.listSubscriptions(user?._id ? { userId: user._id } : undefined),
+        ]);
+        setPlans(plansRes.data || []);
+        setSubs(subsRes.data || []);
+      } catch (e: any) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user?._id]);
 
-  const services = [
-    {
-      id: '1',
-      name: 'Fibernet Premium',
-      description: 'Ultra-fast fiber optic internet with unlimited data',
-      type: 'Fibernet' as const,
-      featured: true,
-      plans: [
-        { id: '1', name: 'Starter', speed: '50 Mbps', quota: 100, price: 39.99 },
-        { id: '2', name: 'Pro', speed: '100 Mbps', quota: 200, price: 59.99 },
-        { id: '3', name: 'Ultra', speed: '300 Mbps', quota: 500, price: 99.99 },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Broadband Copper',
-      description: 'Reliable copper wire internet for everyday use',
-      type: 'Broadband Copper' as const,
-      featured: false,
-      plans: [
-        { id: '4', name: 'Basic', speed: '25 Mbps', quota: 50, price: 24.99 },
-        { id: '5', name: 'Standard', speed: '50 Mbps', quota: 100, price: 34.99 },
-      ],
-    },
-  ];
+  // Subscribe to a plan
+  const handleSubscribe = async (planId: string) => {
+    if (!user?._id) return alert('No user in local storage.');
+    try {
+      const res = await api.subscribe(user._id, planId);
+      setSubs(prev => [res.data, ...prev]);
+      alert('Subscribed successfully');
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  // Upgrade/Downgrade
+  const handleChangePlan = async (subscriptionId: string, newPlanId: string) => {
+    try {
+      const res = await api.changePlan(subscriptionId, newPlanId);
+      setSubs(prev => prev.map(s => (s._id === subscriptionId ? res.data : s)));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleCancel = async (subscriptionId: string) => {
+    try {
+      const res = await api.cancel(subscriptionId);
+      setSubs(prev => prev.map(s => (s._id === subscriptionId ? res.data : s)));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleRenew = async (subscriptionId: string) => {
+    try {
+      const res = await api.renew(subscriptionId);
+      setSubs(prev => prev.map(s => (s._id === subscriptionId ? res.data : s)));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const services = useMemo(() => {
+    const byType: Record<string, any> = {};
+    for (const p of plans) {
+      const type = p.type || 'Other';
+      if (!byType[type]) byType[type] = { id: type, name: `${type} Plans`, description: `${type} internet plans`, type, featured: type === 'Fibernet', plans: [] as any[] };
+      byType[type].plans.push({ 
+        id: p._id, 
+        name: p.Name || p.name, 
+        speed: p.speed, 
+        quota: p.quota, 
+        price: p.Price || p.price 
+      });
+    }
+    return Object.values(byType);
+  }, [plans]);
 
   const handlePlanDetails = (planId: string) => {
-    console.log('View plan details:', planId);
+    const plan = plans.find(p => p._id === planId);
+    if (!plan) return;
+    if (confirm(`Subscribe to ${plan.Name || plan.name} for $${plan.Price || plan.price}/mo?`)) {
+      handleSubscribe(planId);
+    }
   };
 
   const handleServiceExplore = (serviceId: string) => {
-    console.log('Explore service:', serviceId);
+    const s = services.find((x: any) => x.id === serviceId) as any;
+    if (!s) return;
+    const choice = prompt(`Enter plan name to subscribe:\n${s.plans.map((p: any) => `- ${p.name} ($${p.price})`).join('\n')}`);
+    const plan = plans.find(p => (p.Name || p.name).toLowerCase() === String(choice||'').toLowerCase());
+    if (plan) handleSubscribe(plan._id);
   };
 
   if (userType === 'admin') {
@@ -249,16 +286,37 @@ const Dashboard = ({ userType }: DashboardProps) => {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-deep-blue">My Active Plans</h2>
             <Badge variant="outline" className="text-deep-blue">
-              {userPlans.length} Active
+              {subs.filter(s => s.status === 'active').length} Active
             </Badge>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {userPlans.map(plan => (
+            {loading && <p className="text-sm text-muted-foreground">Loading your plans...</p>}
+            {!loading && subs.length === 0 && <p className="text-sm text-muted-foreground">You have no subscriptions yet.</p>}
+            {!loading && subs.map(sub => (
               <PlanCard 
-                key={plan.id}
-                plan={plan}
-                onViewDetails={handlePlanDetails}
+                key={sub._id}
+                plan={{
+                  id: sub._id,
+                  name: sub.plan?.name || 'Plan',
+                  type: sub.plan?.type || '',
+                  quota: sub.plan?.quota || 0,
+                  speed: sub.plan?.speed || '',
+                  price: sub.plan?.price || 0,
+                  expiryDate: sub.endDate ? new Date(sub.endDate).toLocaleDateString() : '—',
+                  status: (sub.status || 'active') as any,
+                  daysLeft: sub.endDate ? Math.max(0, Math.ceil((new Date(sub.endDate).getTime() - Date.now()) / (1000*60*60*24))) : 30,
+                }}
+                onViewDetails={(planId) => {
+                  const choice = prompt('Type: upgrade <PlanName>, downgrade <PlanName>, cancel, or renew');
+                  if (!choice) return;
+                  const [action, ...rest] = choice.split(' ');
+                  if (action === 'cancel') return handleCancel(sub._id);
+                  if (action === 'renew') return handleRenew(sub._id);
+                  const targetName = rest.join(' ');
+                  const newPlan = plans.find(p => p.name.toLowerCase() === targetName.toLowerCase());
+                  if (newPlan) handleChangePlan(sub._id, newPlan._id);
+                }}
               />
             ))}
           </div>
@@ -274,7 +332,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {services.map(service => (
+            {services.map((service: any) => (
               <ServiceCard 
                 key={service.id}
                 service={service}

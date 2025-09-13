@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Subscription Management Admin Dashboard Design System */
+
+@layer base {
+  :root {
+    /* Core Admin Colors - Based on provided specifications */
+    --background: 0 0% 100%;
+    --foreground: 215 25% 27%;
+
+    /* Deep Blue Navigation & Header */
+    --admin-primary: 225 83% 25%; /* Deep Blue */
+    --admin-primary-foreground: 0 0% 100%; /* White text */
+    
+    /* Soft Cyan for Hover States */
+    --admin-success: 185 96% 71%; /* Soft Cyan */
+    --admin-success-foreground: 215 25% 27%;
+    
+    /* Accent Orange for Warnings */
+    --admin-warning: 25 95% 53%; /* Accent Orange */
+    --admin-warning-foreground: 0 0% 100%;
+    
+    /* Light Gray Secondary */
+    --admin-secondary: 220 14% 96%; /* Light Gray */
+    --admin-secondary-foreground: 215 25% 27%; /* Dark Gray text */
+    
+    /* Cards and Tables */
+    --card: 0 0% 100%; /* White background */
+    --card-foreground: 215 25% 27%;
+    --card-border: 220 13% 91%; /* Light Gray borders */
+    
+    /* Enhanced Design Tokens */
+    --primary: 225 83% 25%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 215 25% 27%;
+    
+    --success: 185 96% 71%;
+    --success-foreground: 215 25% 27%;
+    
+    --warning: 25 95% 53%;
+    --warning-foreground: 0 0% 100%;
+    
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 225 83% 25%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 225 83% 25%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+    
+    --radius: 0.75rem;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(225 83% 25%), hsl(225 83% 35%));
+    --gradient-success: linear-gradient(135deg, hsl(185 96% 71%), hsl(185 96% 81%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    
+    /* Shadows */
+    --shadow-card: 0 4px 6px -1px hsl(225 83% 25% / 0.1), 0 2px 4px -1px hsl(225 83% 25% / 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(225 83% 25% / 0.1), 0 4px 6px -2px hsl(225 83% 25% / 0.05);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
+    
+    /* Sidebar for Admin */
+    --sidebar-background: 225 83% 25%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 225 83% 25%;
+    --sidebar-accent: 225 83% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 225 83% 35%;
+    --sidebar-ring: 185 96% 71%;
+  }
+
+  .dark {
+    --background: 215 28% 17%;
+    --foreground: 210 40% 98%;
+
+    /* Dark mode admin colors */
+    --admin-primary: 225 83% 25%;
+    --admin-primary-foreground: 0 0% 100%;
+    
+    --admin-success: 185 96% 71%;
+    --admin-success-foreground: 215 28% 17%;
+    
+    --admin-warning: 25 95% 53%;
+    --admin-warning-foreground: 0 0% 100%;
+    
+    --admin-secondary: 215 28% 25%;
+    --admin-secondary-foreground: 210 40% 98%;
+
+    --card: 215 28% 17%;
+    --card-foreground: 210 40% 98%;
+    --card-border: 215 28% 25%;
+
+    --primary: 225 83% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 28% 25%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --success: 185 96% 71%;
+    --success-foreground: 215 28% 17%;
+    
+    --warning: 25 95% 53%;
+    --warning-foreground: 0 0% 100%;
+
+    --muted: 215 28% 25%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 28% 25%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 28% 25%;
+    --input: 215 28% 25%;
+    --ring: 216 12.2% 83.9%;
+    
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --sidebar-background: 225 83% 25%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 225 83% 25%;
+    --sidebar-accent: 225 83% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 225 83% 35%;
+    --sidebar-ring: 185 96% 71%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,14 @@
+# Ignore data and model artifacts
+data/raw/
+data/processed/
+models/
+__pycache__/
+*.pyc
+*.pkl
+*.xlsx
+*.csv
+env/
+venv/
+.env
+.DS_Store
+node_modules/

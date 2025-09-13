@@ -630,9 +630,13 @@
                             })));
                             window.location.href = `http://127.0.0.1:5173/?auth=${handoff}`;
                         } else {
-                            // For regular users, you can create a simple user dashboard or redirect elsewhere
-                            showMessage('signin-message', 'User dashboard coming soon! 🚧', 'success');
-                            console.log('User logged in:', result.user);
+                            // Redirect to user dashboard (frontend_user app) with the same auth handoff
+                            const handoff = btoa(encodeURIComponent(JSON.stringify({
+                                user: result.user,
+                                isLoggedIn: true
+                            })));
+                            // NOTE: User app runs on 5175 (configured below)
+                            window.location.href = `http://127.0.0.1:5175/?auth=${handoff}`;
                         }
                     }, 2000);
                 } else {
